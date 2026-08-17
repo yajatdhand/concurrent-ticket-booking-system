@@ -20,9 +20,17 @@ public class TicketBookingController {
         this.ticketBookingService = ticketBookingService;
     }
 
-    @PostMapping("book-ticket")
-    public ResponseEntity<BookTicketResponse> bookTicket(@RequestBody BookTicketRequest request) {
-        Seat seat = ticketBookingService.bookTicket(request.seatId(), request.showId());
+    @PostMapping("book-ticket-optimistic")
+    public ResponseEntity<BookTicketResponse> bookTicketOptimistic(@RequestBody BookTicketRequest request) {
+        Seat seat = ticketBookingService.bookTicketOptimistically(request.seatId(), request.showId());
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(new BookTicketResponse(seat.getSeatNumber(), seat.getShow().getMovieName(), seat.getBookingStatus()));
+    }
+
+    @PostMapping("book-ticket-pessimistic")
+    public ResponseEntity<BookTicketResponse> bookTicketPessimistic(@RequestBody BookTicketRequest request) {
+        Seat seat = ticketBookingService.bookTicketPessimistically(request.seatId(), request.showId());
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(new BookTicketResponse(seat.getSeatNumber(), seat.getShow().getMovieName(), seat.getBookingStatus()));

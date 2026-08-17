@@ -22,20 +22,31 @@ public class TicketBookingServiceImpl implements TicketBookingService {
 
     @Override
     @Transactional
-    public Seat bookTicket(Long seatId, Long showId) {
-        Seat response;
+    public Seat bookTicketOptimistically(Long seatId, Long showId) {
         Optional<Seat> seat = seatRepository.findBySeatIdAndShow_ShowId(seatId, showId);
-        if (seat.isPresent()) {
-            Seat entity = seat.get();
-            if (entity.getBookingStatus() == BookingStatus.AVAILABLE) {
-                entity.setBookingStatus(BookingStatus.BOOKED);
-                response = seatRepository.save(entity);
-            } else {
-                throw new SeatAlreadyBookedException("Seat is already booked!");
-            }
-        } else {
-            throw new SeatNotFoundException("Seat not found!");
+        return processBooking(seat);
+    }
+
+    @Override
+    @Transactional
+    public Seat bookTicketPessimistically(Long seatId, Long showId) {
+        Optional<Seat> seat = seatRepository.findPessimisticBySeatIdAndShow_ShowId(seatId, showId);
+        return processBooking(seat);
+    }
+
+    private Seat processBooking(Optional<Seat> seat) {
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
-        return response;
+        if (seat.isEmpty()) throw new SeatNotFoundException("Seat not found!");
+
+        Seat entity = seat.get();
+        if (entity.getBookingStatus() != BookingStatus.AVAILABLE)
+            throw new SeatAlreadyBookedException("Seat is already booked!");
+
+        entity.setBookingStatus(BookingStatus.BOOKED);
+        return entity;
     }
 }

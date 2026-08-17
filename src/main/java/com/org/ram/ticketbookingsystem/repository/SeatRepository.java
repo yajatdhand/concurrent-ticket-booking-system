@@ -11,6 +11,8 @@ import java.util.Optional;
 @Repository
 public interface SeatRepository extends JpaRepository<Seat, Long> {
 
-//    @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<Seat> findBySeatIdAndShow_ShowId(final Long seatId, final Long showId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    Optional<Seat> findPessimisticBySeatIdAndShow_ShowId(final Long seatId, final Long showId);
 }
